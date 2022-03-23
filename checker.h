@@ -2,37 +2,41 @@
 #include <windows.h>
 #include <gl/gl.h>
 
-#pragma comment(lib, "opengl32.lib") //подключение opengl
+#pragma comment(lib, "opengl32.lib") //РїРѕРґРєР»СЋС‡РµРЅРёРµ opengl
 
-//Перечисление - цвет у шашки
+//РџРµСЂРµС‡РёСЃР»РµРЅРёРµ - С†РІРµС‚ Сѓ С€Р°С€РєРё
 enum CheckerColor {
-	BLACK, WHITE, EXCEPTION_COLOR //exception_color - если на клетке нет шашки никакой, то это дает исключение
+	BLACK, WHITE, EXCEPTION_COLOR //exception_color - РµСЃР»Рё РЅР° РєР»РµС‚РєРµ РЅРµС‚ С€Р°С€РєРё РЅРёРєР°РєРѕР№, С‚Рѕ СЌС‚Рѕ РґР°РµС‚ РёСЃРєР»СЋС‡РµРЅРёРµ
 };
 
-//Это перечисление - должность шашки
+//Р­С‚Рѕ РїРµСЂРµС‡РёСЃР»РµРЅРёРµ - РґРѕР»Р¶РЅРѕСЃС‚СЊ С€Р°С€РєРё
 enum CheckerHierarchy {
-	CHECKER, KING, EXCEPTION_POST //Т.e либо пешка либо дамка, либо на клетке нет никакой шашки
+	CHECKER, KING, EXCEPTION_POST //Рў.e Р»РёР±Рѕ РїРµС€РєР° Р»РёР±Рѕ РґР°РјРєР°, Р»РёР±Рѕ РЅР° РєР»РµС‚РєРµ РЅРµС‚ РЅРёРєР°РєРѕР№ С€Р°С€РєРё
 };
 
 
 class Checker {
 public:
-	Checker(CheckerColor b_or_w) { _color = b_or_w; _post = CHECKER; } //Конструктор, принимает на вход цвет, и выставляет шашке ее должность
+	Checker(CheckerColor b_or_w) { _color = b_or_w; _post = CHECKER; } //РљРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ, РїСЂРёРЅРёРјР°РµС‚ РЅР° РІС…РѕРґ С†РІРµС‚, Рё РІС‹СЃС‚Р°РІР»СЏРµС‚ С€Р°С€РєРµ РµРµ РґРѕР»Р¶РЅРѕСЃС‚СЊ
 
-	void CheckerSelect() { _selected == true ? _selected = false : _selected = true; } //выделяет шашку, если она выделена, то выделение убирается, и наоборот
-	void CheckerSelectON() { _selected = true; } //выделяет шашку
-	void CheckerSelectOFF() { _selected = false; } //убирает выделение шашки (особо эти 2 функции не пригодились)
+	void drawChecker(); //СЂРёСЃРѕРІРєР° С€Р°С€РєРё
+        void drawFrame(); //СЂРёСЃРѕРІРєР° СЂР°РјРєРё РґР»СЏ С€Р°С€РєРё (РѕРєСЂСѓР¶РЅРѕСЃС‚СЊ СЂРёСЃСѓРµС‚СЃСЏ)
+	
+	
+	void CheckerSelect() { _selected == true ? _selected = false : _selected = true; } //РІС‹РґРµР»СЏРµС‚ С€Р°С€РєСѓ, РµСЃР»Рё РѕРЅР° РІС‹РґРµР»РµРЅР°, С‚Рѕ РІС‹РґРµР»РµРЅРёРµ СѓР±РёСЂР°РµС‚СЃСЏ, Рё РЅР°РѕР±РѕСЂРѕС‚
+	void CheckerSelectON() { _selected = true; } //РІС‹РґРµР»СЏРµС‚ С€Р°С€РєСѓ
+	void CheckerSelectOFF() { _selected = false; } //СѓР±РёСЂР°РµС‚ РІС‹РґРµР»РµРЅРёРµ С€Р°С€РєРё (РѕСЃРѕР±Рѕ СЌС‚Рё 2 С„СѓРЅРєС†РёРё РЅРµ РїСЂРёРіРѕРґРёР»РёСЃСЊ)
 
-	bool isSelected() { return _selected; } //bool, дает нам понять выделена данная шашка или не выделена
+	bool isSelected() { return _selected; } //bool, РґР°РµС‚ РЅР°Рј РїРѕРЅСЏС‚СЊ РІС‹РґРµР»РµРЅР° РґР°РЅРЅР°СЏ С€Р°С€РєР° РёР»Рё РЅРµ РІС‹РґРµР»РµРЅР°
 
-	CheckerColor getColor() { return _color; } //возвращает цвет шашки
-	CheckerHierarchy getPost() { return _post; } //возвращает должность шашки
+	CheckerColor getColor() { return _color; } //РІРѕР·РІСЂР°С‰Р°РµС‚ С†РІРµС‚ С€Р°С€РєРё
+	CheckerHierarchy getPost() { return _post; } //РІРѕР·РІСЂР°С‰Р°РµС‚ РґРѕР»Р¶РЅРѕСЃС‚СЊ С€Р°С€РєРё
 
-	void setPost(CheckerHierarchy post) { _post = post; } //устанавливает должность шашки (Используется только когда нужно сделать дамку)
+	void setPost(CheckerHierarchy post) { _post = post; } //СѓСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ РґРѕР»Р¶РЅРѕСЃС‚СЊ С€Р°С€РєРё (РСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ С‚РѕР»СЊРєРѕ РєРѕРіРґР° РЅСѓР¶РЅРѕ СЃРґРµР»Р°С‚СЊ РґР°РјРєСѓ)
 
-//Приватные данные
+//РџСЂРёРІР°С‚РЅС‹Рµ РґР°РЅРЅС‹Рµ
 private:
-	bool _selected = false; //выделено ли
-	CheckerColor _color;    //цвет
-	CheckerHierarchy _post; //должность
+	bool _selected = false; //РІС‹РґРµР»РµРЅРѕ Р»Рё
+	CheckerColor _color;    //С†РІРµС‚
+	CheckerHierarchy _post; //РґРѕР»Р¶РЅРѕСЃС‚СЊ
 };
