@@ -1,4 +1,6 @@
 #include <windows.h>
+#include "player.h"
+#include "SmartBot.h"
 #include <gl/gl.h>
 #include <iostream>
 
@@ -9,6 +11,70 @@ LRESULT CALLBACK WindowProc(HWND, UINT, WPARAM, LPARAM);
 void EnableOpenGL(HWND hwnd, HDC*, HGLRC*);
 void DisableOpenGL(HWND, HDC, HGLRC);
 
+//Ф-я возвращает координату твоего клика по карте
+void ScreenToOpenGL(HWND hwnd, int x, int y, float* ox, float* oy) {
+	RECT rct;
+	GetClientRect(hwnd, &rct);
+	*ox = x / (float)rct.right * playboard.getW();
+	*oy = playboard.getH() - y / (float)rct.bottom * playboard.getH();
+}
+
+//Проверка кликнули ли мы на доску или вне границ карты
+bool IsCellInMap(int x, int y) {
+	return (x >= 0) && (y >= 0) && (x <= playboard.getW()) && (y <= playboard.getH());
+}
+
+Player* player1;
+Player* player2;
+
+void Menu() {
+
+	int play_or_watch = 0;
+	std::cout << "Who's playing white?" << std::endl;
+	std::cout << "EASY BOT - PRESS 1" << std::endl;
+	std::cout << "MEDIUM BOT - PRESS 2" << std::endl;
+	std::cout << "SMART BOT BOT - PRESS 3" << std::endl;
+	std::cout << "REAL PLAYER - PRESS 4" << std::endl;
+
+	while ((play_or_watch == 1 || play_or_watch == 2 || play_or_watch == 3 || play_or_watch == 4) != true) {
+		std::cin >> play_or_watch;
+	}
+	if (play_or_watch == 1) {
+		player1 = new EasyBot(&playboard);
+	}
+	else if (play_or_watch == 2) {
+		player1 = new MediumBot(&playboard);
+	}
+	else if (play_or_watch == 3) {
+		player1 = new SmartBot(2, &playboard);
+	}
+	else if (play_or_watch == 4) {
+		player1 = new Player(&playboard);
+	}
+
+	std::cout << "Who's playing black?" << std::endl;
+	std::cout << "EASY BOT - PRESS 1" << std::endl;
+	std::cout << "MEDIUM BOT - PRESS 2" << std::endl;
+	std::cout << "SMART BOT BOT - PRESS 3" << std::endl;
+	std::cout << "REAL PLAYER - PRESS 4" << std::endl;
+
+	play_or_watch = 0;
+	while ((play_or_watch == 1 || play_or_watch == 2 || play_or_watch == 3 || play_or_watch == 4) != true) {
+		std::cin >> play_or_watch;
+	}
+	if (play_or_watch == 1) {
+		player2 = new EasyBot(&playboard);
+	}
+	else if (play_or_watch == 2) {
+		player2 = new MediumBot(&playboard);
+	}
+	else if (play_or_watch == 3) {
+		player2 = new SmartBot(3, &playboard);
+	}
+	else if (play_or_watch == 4) {
+		player2 = new Player(&playboard);
+	}
+}
 
 
 int WINAPI WinMain(HINSTANCE hInstance,
@@ -67,6 +133,12 @@ int WINAPI WinMain(HINSTANCE hInstance,
 	glScalef(float(512) / float(512), 1, 1); //функция масштабирования экрана,
 	// растягивает сжимает или отражает по осям х у z
 
+	AllocConsole(); // открываем консоль, куда будем записывать счет, ход игры и прочее через cout
+	freopen_s((FILE**)stdout, "CONOUT$", "w", stdout);
+	freopen_s((FILE**)stdin, "CONIN$", "r", stdin);
+	std::cout << "GAME RUSSIAN CHECKERS" << std::endl;
+
+	Menu();
 
 	/* program main loop */
 	while (!bQuit)
@@ -91,6 +163,8 @@ int WINAPI WinMain(HINSTANCE hInstance,
 			glClearColor(1.0f, 1.0f, 1.0f, 0.5f);
 			glClear(GL_COLOR_BUFFER_BIT);
 
+			playboard.drawPlayboard();
+
 			SwapBuffers(hDC);
 			Sleep(200);
 		}
@@ -104,6 +178,9 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
 	return int(msg.wParam);
 }
+
+
+int turn = 0;
 
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -120,7 +197,22 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_LBUTTONDOWN:
 	{
 		POINTFLOAT pf;
-
+		ScreenToOpenGL(hwnd, LOWORD(lParam), HIWORD(lParam), &pf.x, &pf.y);
+		int x = int(pf.x);
+		int y = int(pf.y);
+		int move = 0;
+		if (IsCellInMap(x, y)) {
+			if (turn % 2 == 0) {
+				if (player1->Turn(x, y, WHITE)) {
+					turn++;
+				}
+			}
+			else {
+				if (player2->Turn(x, y, BLACK)) {
+					turn++;
+				}
+			}
+		}
 	}
 	case WM_KEYDOWN:
 	{
